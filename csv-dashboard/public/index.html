@@ -16,6 +16,10 @@
     padding: 16px;
   }
   h1 { font-size: 1.3rem; margin: 0 0 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #262a33; }
+  .tab { padding: 8px 16px; background: transparent; border: none; color: #9a9ea8; cursor: pointer; font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab:hover { color: #e8e8ea; }
+  .tab.active { color: #4ade80; border-bottom-color: #4ade80; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 20px; }
   .card { background: #1a1d24; border-radius: 10px; padding: 12px; }
   .card .label { font-size: 0.75rem; color: #9a9ea8; margin-bottom: 4px; }
@@ -31,6 +35,11 @@
 </head>
 <body>
   <h1>🚗 주행 데이터 대시보드</h1>
+  <div class="tabs">
+    <button class="tab active" data-days="1">오늘</button>
+    <button class="tab" data-days="30">이번달</button>
+    <button class="tab" data-days="365">올해</button>
+  </div>
   <div id="status">불러오는 중...</div>
 
   <div class="cards" id="summaryCards"></div>
@@ -49,12 +58,15 @@
   </div>
 
 <script>
-async function load() {
+let currentDays = 30;
+
+async function load(days = currentDays) {
+  currentDays = days;
   const statusEl = document.getElementById('status');
   try {
     const [tripsRes, dailyRes] = await Promise.all([
       fetch('/api/trips?limit=30'),
-      fetch('/api/daily?days=30'),
+      fetch(`/api/daily?days=${days}`),
     ]);
     const trips = (await tripsRes.json()).trips;
     const daily = (await dailyRes.json()).daily;
@@ -125,8 +137,17 @@ function renderTable(trips) {
   `).join('');
 }
 
+// Tab click handlers
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    load(parseInt(tab.dataset.days));
+  });
+});
+
 load();
-setInterval(load, 30000);
+setInterval(() => load(currentDays), 30000);
 </script>
 </body>
 </html>
