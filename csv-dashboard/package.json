@@ -1,0 +1,14 @@
+{
+  "name": "csv-dashboard",
+  "version": "1.0.0",
+  "description": "Car Stats Viewer webhook receiver + driving data dashboard",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "googleapis": "^176.0.0"
+  }
+}

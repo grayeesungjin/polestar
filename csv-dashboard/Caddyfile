@@ -1,0 +1,6 @@
+# mycar.duckdns.org 부분을 본인이 발급받은 DDNS 도메인으로 바꾸세요.
+# Caddy가 이 파일을 읽고 자동으로 Let's Encrypt 인증서를 발급/갱신합니다.
+
+mycar.duckdns.org {
+    reverse_proxy app:3000
+}
