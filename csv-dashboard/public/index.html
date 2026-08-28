@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>주행 데이터 대시보드</title>
+<title>🚗 Polestar 4 대시보드</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root { color-scheme: dark; }
@@ -15,155 +15,293 @@
     color: #e8e8ea;
     padding: 16px;
   }
-  h1 { font-size: 1.3rem; margin: 0 0 16px; }
-  /* 메인 컨테이너: 태블릿 이상에서 2열 */
-  .main-container {
-    display: grid;
-    gap: 16px;
-  }
-  @media (min-width: 768px) {
-    .main-container {
-      grid-template-columns: 1fr 1.2fr;
-    }
-  }
   
-  /* 왼쪽 영역 */
-  .left-section {
+  h1 { font-size: 1.4rem; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+  
+  /* 탭 스타일 */
+  .tabs {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #262a33;
+    padding-bottom: 12px;
   }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: #9a9ea8;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    color: #4ade80;
+    border-bottom-color: #4ade80;
+  }
+  .tab-btn:hover { color: #e8e8ea; }
   
-  /* 오른쪽 영역 */
-  .right-section {
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  .subtabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 8px;
     background: #1a1d24;
-    border-radius: 10px;
-    padding: 12px;
-    overflow-x: auto;
+    border-radius: 6px;
+  }
+  .subtab-btn {
+    background: #262a33;
+    border: none;
+    color: #9a9ea8;
+    cursor: pointer;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .subtab-btn.active {
+    background: #4ade80;
+    color: #1a1d24;
   }
   
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-  @media (min-width: 768px) {
-    .cards {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 20px; }
   .card { background: #1a1d24; border-radius: 10px; padding: 12px; }
   .card .label { font-size: 0.75rem; color: #9a9ea8; margin-bottom: 4px; }
   .card .value { font-size: 1.3rem; font-weight: 600; }
-  .chart-wrap { background: #1a1d24; border-radius: 10px; padding: 12px; }
+  
+  .chart-wrap { background: #1a1d24; border-radius: 10px; padding: 12px; margin-bottom: 20px; }
+  
   table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
   th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid #262a33; }
   th:first-child, td:first-child { text-align: left; }
   th { color: #9a9ea8; font-weight: 500; }
-  .open-badge { color: #4ade80; font-size: 0.7rem; }
+  
+  .efficiency-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .efficiency-good { background: #4ade80; color: #1a1d24; }
+  .efficiency-normal { background: #eab308; color: #1a1d24; }
+  .efficiency-poor { background: #f87171; color: #1a1d24; }
+  
   #status { font-size: 0.8rem; color: #9a9ea8; margin-bottom: 12px; }
+  
+  .empty { text-align: center; color: #9a9ea8; padding: 40px 20px; }
 </style>
 </head>
 <body>
-  <h1>🚗 주행 데이터 대시보드</h1>
+  <h1>🚗 Polestar 4 대시보드</h1>
   <div id="status">불러오는 중...</div>
 
-  <div class="main-container">
-    <!-- 왼쪽: 카드 + 차트 -->
-    <div class="left-section">
-      <div class="cards" id="summaryCards"></div>
+  <!-- 메인 탭 -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('driving')">주행</button>
+    <button class="tab-btn" onclick="switchTab('charging')">충전</button>
+  </div>
 
-      <div class="chart-wrap">
-        <canvas id="trendChart" height="140"></canvas>
-      </div>
+  <!-- ==================== 주행 탭 ==================== -->
+  <div id="driving" class="tab-content active">
+    <div class="subtabs">
+      <button class="subtab-btn active" onclick="switchDrivingPeriod('today')">오늘</button>
+      <button class="subtab-btn" onclick="switchDrivingPeriod('month')">이번달</button>
+      <button class="subtab-btn" onclick="switchDrivingPeriod('year')">올해</button>
     </div>
-
-    <!-- 오른쪽: 테이블 -->
-    <div class="right-section">
+    
+    <div id="drivingSummary" class="cards"></div>
+    <div class="chart-wrap">
+      <canvas id="drivingChart" height="140"></canvas>
+    </div>
+    <div class="chart-wrap">
       <table>
         <thead>
-          <tr><th>날짜</th><th>거리(km)</th><th>전비(Wh/km)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
+          <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
         </thead>
-        <tbody id="tripsBody"></tbody>
+        <tbody id="drivingBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== 충전 탭 ==================== -->
+  <div id="charging" class="tab-content">
+    <div id="chargingSummary" class="cards"></div>
+    <div class="chart-wrap">
+      <table>
+        <thead>
+          <tr><th>날짜</th><th>시작 → 종료</th><th>충전량(kWh)</th><th>소요시간(분)</th><th>평균전력(kW)</th><th>손실(kWh)</th><th>타입</th></tr>
+        </thead>
+        <tbody id="chargingBody"></tbody>
       </table>
     </div>
   </div>
 
 <script>
-async function load() {
+let drivingChart;
+let currentDrivingPeriod = 'today';
+
+// ========== 탭 전환 ==========
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+  
+  if (tab === 'driving') {
+    loadDriving();
+  } else if (tab === 'charging') {
+    loadCharging();
+  }
+}
+
+function switchDrivingPeriod(period) {
+  currentDrivingPeriod = period;
+  document.querySelectorAll('.subtab-btn').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  loadDriving();
+}
+
+// ========== 주행 데이터 ==========
+async function loadDriving() {
   const statusEl = document.getElementById('status');
   try {
-    const [tripsRes, dailyRes] = await Promise.all([
-      fetch('/api/trips?limit=30'),
-      fetch('/api/daily?days=30'),
-    ]);
-    const trips = (await tripsRes.json()).trips;
-    const daily = (await dailyRes.json()).daily;
-
-    renderSummary(trips);
-    renderTrend(daily);
-    renderTable(trips);
-    statusEl.textContent = `최근 트립 ${trips.length}개, ${new Date().toLocaleTimeString('ko-KR')} 기준`;
+    let url = `/api/trips/${currentDrivingPeriod}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const trips = data.trips || [];
+    
+    renderDrivingSummary(trips);
+    renderDrivingTable(trips);
+    statusEl.textContent = `최근 로드 ${new Date().toLocaleTimeString('ko-KR')}`;
   } catch (e) {
     statusEl.textContent = '데이터를 불러오지 못했습니다: ' + e.message;
   }
 }
 
-function renderSummary(trips) {
-  const closed = trips.filter(t => !t.open);
-  const totalKm = closed.reduce((s, t) => s + t.distanceKm, 0);
-  const totalWh = closed.reduce((s, t) => s + t.energyWh, 0);
-  const avgWhKm = totalKm > 0 ? totalWh / totalKm : null;
+function renderDrivingSummary(trips) {
+  if (trips.length === 0) {
+    document.getElementById('drivingSummary').innerHTML = '<div class="empty">데이터 없음</div>';
+    return;
+  }
+  
+  const totalKm = trips.reduce((s, t) => s + t.distanceKm, 0);
+  const totalMin = trips.reduce((s, t) => s + t.durationMin, 0);
+  const avgEfficiency = trips.length > 0
+    ? trips.reduce((s, t) => s + t.efficiencyKmPerKwh, 0) / trips.length
+    : 0;
 
   const cards = [
-    ['최근 트립 수', trips.length],
+    ['트립 수', trips.length],
     ['누적 거리(km)', totalKm.toFixed(1)],
-    ['평균 전비(Wh/km)', avgWhKm != null ? avgWhKm.toFixed(0) : '-'],
+    ['평균 전비(km/kWh)', avgEfficiency.toFixed(2)],
+    ['소요시간(분)', totalMin.toFixed(0)],
   ];
-  document.getElementById('summaryCards').innerHTML = cards.map(([label, value]) => `
+  
+  document.getElementById('drivingSummary').innerHTML = cards.map(([label, value]) => `
     <div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>
   `).join('');
 }
 
-let chart;
-function renderTrend(daily) {
-  const ctx = document.getElementById('trendChart').getContext('2d');
-  const labels = daily.map(d => d.day);
-  const consumption = daily.map(d => d.avgConsumptionWhKm);
-  const distance = daily.map(d => d.distanceKm);
-
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    data: {
-      labels,
-      datasets: [
-        { type: 'bar', label: '거리(km)', data: distance, backgroundColor: '#2c3550', yAxisID: 'y1' },
-        { type: 'line', label: '전비(Wh/km)', data: consumption, borderColor: '#4ade80', backgroundColor: '#4ade80', yAxisID: 'y2', tension: 0.3 },
-      ],
-    },
-    options: {
-      responsive: true,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        y1: { position: 'left', title: { display: true, text: 'km' }, grid: { color: '#262a33' } },
-        y2: { position: 'right', title: { display: true, text: 'Wh/km' }, grid: { drawOnChartArea: false } },
-        x: { grid: { color: '#262a33' } },
-      },
-      plugins: { legend: { labels: { color: '#e8e8ea' } } },
-    },
-  });
+function getEfficiencyBadge(efficiency) {
+  // WLTP 기준: 5.0km/kWh
+  // 좋음(6.0↑): 녹색, 보통(5.0-6.0): 노랑, 안좋음(5.0↓): 빨강
+  if (efficiency >= 6.0) {
+    return `<span class="efficiency-badge efficiency-good">● ${efficiency.toFixed(2)}km/kWh</span>`;
+  } else if (efficiency >= 5.0) {
+    return `<span class="efficiency-badge efficiency-normal">● ${efficiency.toFixed(2)}km/kWh</span>`;
+  } else {
+    return `<span class="efficiency-badge efficiency-poor">● ${efficiency.toFixed(2)}km/kWh</span>`;
+  }
 }
 
-function renderTable(trips) {
-  document.getElementById('tripsBody').innerHTML = trips.map(t => `
+function renderDrivingTable(trips) {
+  if (trips.length === 0) {
+    document.getElementById('drivingBody').innerHTML = '<tr><td colspan="6" class="empty">데이터 없음</td></tr>';
+    return;
+  }
+  
+  document.getElementById('drivingBody').innerHTML = trips.map(t => `
     <tr>
-      <td>${new Date(t.start).toLocaleString('ko-KR')} ${t.open ? '<span class="open-badge">● 주행중</span>' : ''}</td>
+      <td>${new Date(t.start).toLocaleString('ko-KR')}</td>
       <td>${t.distanceKm ?? '-'}</td>
-      <td>${t.avgConsumptionWhKm ?? '-'}</td>
+      <td>${getEfficiencyBadge(t.efficiencyKmPerKwh)}</td>
+      <td>${t.batteryConsumptionPercent ?? '-'}%</td>
       <td>${t.avgSpeedKmh ?? '-'}</td>
       <td>${t.durationMin ?? '-'}</td>
     </tr>
   `).join('');
 }
 
-load();
-setInterval(load, 30000);
+// ========== 충전 데이터 ==========
+async function loadCharging() {
+  const statusEl = document.getElementById('status');
+  try {
+    const response = await fetch('/api/charging');
+    const data = await response.json();
+    const sessions = data.sessions || [];
+    
+    renderChargingSummary(sessions);
+    renderChargingTable(sessions);
+    statusEl.textContent = `최근 로드 ${new Date().toLocaleTimeString('ko-KR')}`;
+  } catch (e) {
+    statusEl.textContent = '데이터를 불러오지 못했습니다: ' + e.message;
+  }
+}
+
+function renderChargingSummary(sessions) {
+  if (sessions.length === 0) {
+    document.getElementById('chargingSummary').innerHTML = '<div class="empty">충전 기록 없음</div>';
+    return;
+  }
+  
+  const totalEnergyKwh = sessions.reduce((s, t) => s + t.energyChargedKwh, 0);
+  const totalLossKwh = sessions.reduce((s, t) => s + t.estimatedLossKwh, 0);
+  const avgDurationMin = sessions.reduce((s, t) => s + t.durationMin, 0) / sessions.length;
+
+  const cards = [
+    ['충전 횟수', sessions.length],
+    ['총 충전량(kWh)', totalEnergyKwh.toFixed(1)],
+    ['총 손실(kWh)', totalLossKwh.toFixed(1)],
+    ['평균 충전시간(분)', avgDurationMin.toFixed(0)],
+  ];
+  
+  document.getElementById('chargingSummary').innerHTML = cards.map(([label, value]) => `
+    <div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>
+  `).join('');
+}
+
+function renderChargingTable(sessions) {
+  if (sessions.length === 0) {
+    document.getElementById('chargingBody').innerHTML = '<tr><td colspan="7" class="empty">충전 기록 없음</td></tr>';
+    return;
+  }
+  
+  document.getElementById('chargingBody').innerHTML = sessions.map(s => `
+    <tr>
+      <td>${new Date(s.start).toLocaleDateString('ko-KR')}</td>
+      <td>${s.startSoc}% → ${s.endSoc}%</td>
+      <td>${s.energyChargedKwh}kWh</td>
+      <td>${s.durationMin}분</td>
+      <td>${s.avgPowerKw}kW</td>
+      <td>${s.estimatedLossKwh}kWh</td>
+      <td>${s.chargeType}</td>
+    </tr>
+  `).join('');
+}
+
+// ========== 초기 로드 ==========
+document.addEventListener('DOMContentLoaded', () => {
+  loadDriving();
+  setInterval(loadDriving, 30000);
+});
 </script>
 </body>
 </html>
