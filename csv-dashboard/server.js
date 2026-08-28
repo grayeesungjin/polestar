@@ -143,6 +143,32 @@ function calculateTripStats(trip) {
   };
 }
 
+// ========== 타임존 변환 함수 ==========
+
+// 한국시간(KST, UTC+9)으로 현재 날짜 가져오기
+function getTodayKST() {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
+  return kstTime.toISOString().split('T')[0];
+}
+
+// 한국시간(KST)으로 현재 월 가져오기
+function getCurrentMonthKST() {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
+  return `${kstTime.getFullYear()}-${String(kstTime.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// 한국시간(KST)으로 현재 년도 가져오기
+function getCurrentYearKST() {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
+  return kstTime.getFullYear().toString();
+}
+
 // ========== API: 주행 기록 ==========
 
 app.get('/api/trips/today', async (req, res) => {
@@ -151,8 +177,8 @@ app.get('/api/trips/today', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 오늘 데이터만
-    const today = new Date().toISOString().split('T')[0];
+    // 오늘 데이터만 (KST 기준)
+    const today = getTodayKST();
     const todayTrips = trips
       .filter(t => t.start_timestamp.startsWith(today))
       .map(calculateTripStats);
@@ -170,9 +196,8 @@ app.get('/api/trips/month', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 이번 달 데이터
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // 이번 달 데이터 (KST 기준)
+    const currentMonth = getCurrentMonthKST();
     const monthTrips = trips
       .filter(t => t.start_timestamp.startsWith(currentMonth))
       .map(calculateTripStats);
@@ -190,8 +215,8 @@ app.get('/api/trips/year', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 올해 데이터
-    const currentYear = new Date().getFullYear().toString();
+    // 올해 데이터 (KST 기준)
+    const currentYear = getCurrentYearKST();
     const yearTrips = trips
       .filter(t => t.start_timestamp.startsWith(currentYear))
       .map(calculateTripStats);
