@@ -124,7 +124,7 @@
     <div class="chart-wrap">
       <table>
         <thead>
-          <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>소비(Wh/km)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
+          <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
         </thead>
         <tbody id="drivingBody"></tbody>
       </table>
@@ -233,7 +233,7 @@ function renderDrivingTable(trips) {
       <td>${new Date(t.start).toLocaleString('ko-KR')}</td>
       <td>${t.distanceKm ?? '-'}</td>
       <td>${getEfficiencyBadge(t.efficiencyKmPerKwh)}</td>
-      <td>${t.consumptionWhKm ?? '-'}</td>
+      <td>${t.batteryConsumptionPercent ?? '-'}%</td>
       <td>${t.avgSpeedKmh ?? '-'}</td>
       <td>${t.durationMin ?? '-'}</td>
     </tr>
