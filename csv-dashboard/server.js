@@ -107,10 +107,13 @@ function calculateTripStats(trip) {
   const startSoc = startPoint.battery_soc;
   const endSoc = endPoint.battery_soc;
   const socChange = startSoc - endSoc;
+  const batteryConsumptionPercent = socChange * 100;  // 배터리 소모 %
   
+  // 주행 종료 시 5분 대기 로직 때문에 추가되는 시간 빼기
+  const ADDITIONAL_WAIT_TIME_MS = 5 * 60 * 1000; // 5분
   const startTime = new Date(trip.start_timestamp).getTime();
   const endTime = new Date(trip.end_timestamp).getTime();
-  const durationMin = (endTime - startTime) / 60000;
+  const durationMin = ((endTime - startTime - ADDITIONAL_WAIT_TIME_MS) / 60000);  // 5분 제거
   const durationHours = durationMin / 60;
   
   // 에너지 계산 (배터리 102kWh)
@@ -134,6 +137,7 @@ function calculateTripStats(trip) {
     avgSpeedKmh: round1(avgSpeedKmh),
     efficiencyKmPerKwh: round1(efficiencyKmPerKwh),
     consumptionWhKm: round1(consumptionWhKm),
+    batteryConsumptionPercent: round1(batteryConsumptionPercent),  // ✨ NEW
     startSoc: round1(startSoc * 100),
     endSoc: round1(endSoc * 100),
   };
