@@ -69,7 +69,38 @@
     color: #1a1d24;
   }
   
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 20px; }
+  /* 메인 컨테이너 */
+  .main-container {
+    display: grid;
+    gap: 16px;
+  }
+  
+  /* 태블릿 이상: 2열 레이아웃 */
+  @media (min-width: 768px) {
+    .main-container {
+      grid-template-columns: 1fr 1.2fr;
+    }
+  }
+  
+  .left-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .right-section {
+    background: #1a1d24;
+    border-radius: 10px;
+    padding: 12px;
+    overflow-x: auto;
+  }
+  
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  @media (min-width: 768px) {
+    .cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
   .card { background: #1a1d24; border-radius: 10px; padding: 12px; }
   .card .label { font-size: 0.75rem; color: #9a9ea8; margin-bottom: 4px; }
   .card .value { font-size: 1.3rem; font-weight: 600; }
@@ -117,30 +148,40 @@
       <button class="subtab-btn" onclick="switchDrivingPeriod('year')">올해</button>
     </div>
     
-    <div id="drivingSummary" class="cards"></div>
-    <div class="chart-wrap">
-      <canvas id="drivingChart" height="140"></canvas>
-    </div>
-    <div class="chart-wrap">
-      <table>
-        <thead>
-          <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
-        </thead>
-        <tbody id="drivingBody"></tbody>
-      </table>
+    <div class="main-container">
+      <div class="left-section">
+        <div id="drivingSummary" class="cards"></div>
+        <div class="chart-wrap">
+          <canvas id="drivingChart" height="140"></canvas>
+        </div>
+      </div>
+      
+      <div class="right-section">
+        <table>
+          <thead>
+            <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
+          </thead>
+          <tbody id="drivingBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- ==================== 충전 탭 ==================== -->
   <div id="charging" class="tab-content">
-    <div id="chargingSummary" class="cards"></div>
-    <div class="chart-wrap">
-      <table>
-        <thead>
-          <tr><th>날짜</th><th>시작 → 종료</th><th>충전량(kWh)</th><th>소요시간(분)</th><th>평균전력(kW)</th><th>손실(kWh)</th><th>타입</th></tr>
-        </thead>
-        <tbody id="chargingBody"></tbody>
-      </table>
+    <div class="main-container">
+      <div class="left-section">
+        <div id="chargingSummary" class="cards"></div>
+      </div>
+      
+      <div class="right-section">
+        <table>
+          <thead>
+            <tr><th>날짜</th><th>시작 → 종료</th><th>충전량(kWh)</th><th>소요시간(분)</th><th>평균전력(kW)</th><th>손실(kWh)</th><th>타입</th></tr>
+          </thead>
+          <tbody id="chargingBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
