@@ -108,8 +108,8 @@
   .chart-wrap { background: #1a1d24; border-radius: 10px; padding: 12px; margin-bottom: 20px; }
   
   table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-  th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid #262a33; }
-  th:first-child, td:first-child { text-align: left; }
+  th, td { text-align: center; padding: 8px 6px; border-bottom: 1px solid #262a33; }
+  th:first-child, td:first-child { text-align: center; }
   th { color: #9a9ea8; font-weight: 500; }
   
   .efficiency-badge {
@@ -159,7 +159,7 @@
       <div class="right-section">
         <table>
           <thead>
-            <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>소요시간(분)</th></tr>
+            <tr><th>시간</th><th>거리(km)</th><th>전비</th><th>배터리 소모(%)</th><th>평균속도(km/h)</th><th>주행시간(분)</th></tr>
           </thead>
           <tbody id="drivingBody"></tbody>
         </table>
@@ -243,7 +243,7 @@ function renderDrivingSummary(trips) {
     ['트립 수', trips.length],
     ['누적 거리(km)', totalKm.toFixed(1)],
     ['평균 전비(km/kWh)', avgEfficiency.toFixed(2)],
-    ['소요시간(분)', totalMin.toFixed(0)],
+    ['주행시간(분)', totalMin.toFixed(0)],
   ];
   
   document.getElementById('drivingSummary').innerHTML = cards.map(([label, value]) => `
