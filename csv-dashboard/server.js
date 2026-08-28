@@ -6,8 +6,17 @@ const express = require('express');
 const { google } = require('googleapis');
 
 const PORT = process.env.PORT || 3000;
-const SHEET_ID = process.env.SHEET_ID || '1Y8sw6afba_utskOzpPRE6-xTCkXRzH2VZcOAibRBCK8';
-const API_KEY = process.env.API_KEY || 'AIzaSyD-B2ezyeLiPka1rW6yZLp1Uw1SvdDmzMI';
+const SHEET_ID = process.env.SHEET_ID;
+const API_KEY = process.env.API_KEY;
+
+// 환경변수 확인
+if (!SHEET_ID || !API_KEY) {
+  console.error('❌ 에러: SHEET_ID와 API_KEY 환경변수가 필요합니다!');
+  console.error('Render 설정에서 Environment에 다음을 추가하세요:');
+  console.error('  SHEET_ID = <your-sheet-id>');
+  console.error('  API_KEY = <your-api-key>');
+  process.exit(1);
+}
 
 const sheets = google.sheets({
   version: 'v4',
@@ -44,7 +53,7 @@ function parseRows(rows, type = 'drive') {
     
     if (type === 'drive') {
       data.push({
-        timestamp: row[0],
+        timestamp: row[0] ? row[0] + '+09:00' : '',  // ← 타임존 정보 추가!
         distance_m: parseFloat(row[1]) || 0,
         battery_soc: parseFloat(row[2]) || 0,
         avg_speed: parseFloat(row[3]) || 0,
@@ -52,7 +61,7 @@ function parseRows(rows, type = 'drive') {
       });
     } else if (type === 'charge') {
       data.push({
-        timestamp: row[0],
+        timestamp: row[0] ? row[0] + '+09:00' : '',  // ← 타임존 정보 추가!
         start_soc: parseFloat(row[1]) || 0,
         end_soc: parseFloat(row[2]) || 0,
         duration_min: parseInt(row[3]) || 0,
@@ -143,30 +152,23 @@ function calculateTripStats(trip) {
   };
 }
 
-// ========== 타임존 변환 함수 ==========
+// ========== 날짜 필터링 함수 ==========
+// Google Sheets에서 읽은 데이터는 이미 한국시간(KST)으로 저장되어 있음
+// 따라서 단순히 "YYYY-MM-DD" 형식의 문자열만 만들면 됨
 
-// 한국시간(KST, UTC+9)으로 현재 날짜 가져오기
-function getTodayKST() {
-  const now = new Date();
-  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
-  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
-  return kstTime.toISOString().split('T')[0];
+function getTodayDateString() {
+  // Google Sheets 데이터의 timestamp: "2026-08-28T14:04:52"
+  // 이미 한국시간이므로 그냥 날짜만 추출
+  return new Date().toISOString().split('T')[0];
 }
 
-// 한국시간(KST)으로 현재 월 가져오기
-function getCurrentMonthKST() {
+function getCurrentMonthString() {
   const now = new Date();
-  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
-  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
-  return `${kstTime.getFullYear()}-${String(kstTime.getMonth() + 1).padStart(2, '0')}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// 한국시간(KST)으로 현재 년도 가져오기
-function getCurrentYearKST() {
-  const now = new Date();
-  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
-  const kstTime = new Date(now.getTime() + kstOffset - (now.getTimezoneOffset() * 60 * 1000));
-  return kstTime.getFullYear().toString();
+function getCurrentYearString() {
+  return new Date().getFullYear().toString();
 }
 
 // ========== API: 주행 기록 ==========
@@ -177,8 +179,8 @@ app.get('/api/trips/today', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 오늘 데이터만 (KST 기준)
-    const today = getTodayKST();
+    // 오늘 데이터 (Google Sheets의 timestamp는 이미 한국시간)
+    const today = getTodayDateString();
     const todayTrips = trips
       .filter(t => t.start_timestamp.startsWith(today))
       .map(calculateTripStats);
@@ -196,8 +198,8 @@ app.get('/api/trips/month', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 이번 달 데이터 (KST 기준)
-    const currentMonth = getCurrentMonthKST();
+    // 이번 달 데이터
+    const currentMonth = getCurrentMonthString();
     const monthTrips = trips
       .filter(t => t.start_timestamp.startsWith(currentMonth))
       .map(calculateTripStats);
@@ -215,8 +217,8 @@ app.get('/api/trips/year', async (req, res) => {
     const points = parseRows(rows, 'drive');
     const trips = groupIntoTrips(points);
     
-    // 올해 데이터 (KST 기준)
-    const currentYear = getCurrentYearKST();
+    // 올해 데이터
+    const currentYear = getCurrentYearString();
     const yearTrips = trips
       .filter(t => t.start_timestamp.startsWith(currentYear))
       .map(calculateTripStats);
