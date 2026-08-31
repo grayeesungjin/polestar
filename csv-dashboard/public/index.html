@@ -265,7 +265,10 @@ function renderDrivingTable(trips) {
     return;
   }
   
-  document.getElementById('drivingBody').innerHTML = trips.map(t => `
+  // 최신 주행이 위로 오도록 정렬 (원본 배열은 건드리지 않음)
+  const sortedTrips = [...trips].sort((a, b) => new Date(b.start) - new Date(a.start));
+
+  document.getElementById('drivingBody').innerHTML = sortedTrips.map(t => `
     <tr>
       <td>${new Date(t.start).toLocaleString('ko-KR')}</td>
       <td>${t.distanceKm ?? '-'}</td>
@@ -321,7 +324,10 @@ function renderChargingTable(sessions) {
     return;
   }
   
-  document.getElementById('chargingBody').innerHTML = sessions.map(s => `
+  // 최신 충전이 위로 오도록 정렬 (원본 배열은 건드리지 않음)
+  const sortedSessions = [...sessions].sort((a, b) => new Date(b.start) - new Date(a.start));
+
+  document.getElementById('chargingBody').innerHTML = sortedSessions.map(s => `
     <tr>
       <td>${new Date(s.start).toLocaleDateString('ko-KR')}</td>
       <td>${s.startSoc}% → ${s.endSoc}%</td>
