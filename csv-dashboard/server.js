@@ -33,7 +33,7 @@ async function getSheetData(sheetName = 'Sheet1') {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A:E`,
+      range: `${sheetName}!A:F`,
     });
     return response.data.values || [];
   } catch (err) {
@@ -66,6 +66,7 @@ function parseRows(rows, type = 'drive') {
         end_soc: parseFloat(row[2]) || 0,
         duration_min: parseInt(row[3]) || 0,
         charge_type: parseInt(row[4]) || null,
+        cost: parseFloat(row[5]) || 0,   // F열: 직접 입력한 실제 결제금액 (원)
       });
     }
   }
@@ -422,6 +423,7 @@ app.get('/api/charging', async (req, res) => {
           end_timestamp: null,
           end_soc: null,
           duration_min: 0,
+          cost: charge.cost,   // 시작행에 적어도 인식되도록 보관
         };
       } else if (charge.charge_type === 2) {
         // 충전 종료
@@ -429,6 +431,8 @@ app.get('/api/charging', async (req, res) => {
           currentCharge.end_timestamp = charge.timestamp;
           currentCharge.end_soc = charge.end_soc;
           currentCharge.duration_min = charge.duration_min;
+          // 금액은 종료행 우선, 비어 있으면 시작행 값 사용
+          currentCharge.cost = charge.cost || currentCharge.cost || 0;
           chargingSessions.push(currentCharge);
           currentCharge = null;
         }
@@ -449,6 +453,12 @@ app.get('/api/charging', async (req, res) => {
       const gridEnergyNeeded = energyCharged / ((100 - chargeLossPercent) / 100);
       const energyLossKwh = gridEnergyNeeded - energyCharged;
       
+      // 직접 입력한 실제 결제금액 (F열). 미입력이면 0
+      const cost = session.cost || 0;
+      const costPerKwh = energyCharged > 0 && cost > 0
+        ? Math.round(cost / energyCharged)
+        : 0;
+
       return {
         start: startTime,
         end: endTime,
@@ -459,6 +469,8 @@ app.get('/api/charging', async (req, res) => {
         durationMin: round1(session.duration_min),
         avgPowerKw: round1(avgPowerKw),
         estimatedLossKwh: round1(energyLossKwh),
+        cost: cost,
+        costPerKwh: costPerKwh,
         chargeType: avgPowerKw > 50 ? 'DC' : 'AC',
       };
     }).reverse(); // 최신순
