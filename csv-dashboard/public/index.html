@@ -174,7 +174,7 @@
       <div class="right-section">
         <table>
           <thead>
-            <tr><th>날짜</th><th>시작 → 종료</th><th>충전량(kWh)</th><th>소요시간(분)</th><th>평균전력(kW)</th><th>손실(kWh)</th><th>타입</th></tr>
+            <tr><th>날짜</th><th>시작 → 종료</th><th>충전량(kWh)</th><th>소요시간(분)</th><th>평균전력(kW)</th><th>충전비용</th><th>타입</th></tr>
           </thead>
           <tbody id="chargingBody"></tbody>
         </table>
@@ -303,19 +303,31 @@ function renderChargingSummary(sessions) {
   }
   
   const totalEnergyKwh = sessions.reduce((s, t) => s + t.energyChargedKwh, 0);
-  const totalLossKwh = sessions.reduce((s, t) => s + t.estimatedLossKwh, 0);
+  const totalCost = sessions.reduce((s, t) => s + (t.cost || 0), 0);
   const avgDurationMin = sessions.reduce((s, t) => s + t.durationMin, 0) / sessions.length;
 
   const cards = [
     ['충전 횟수', sessions.length],
     ['총 충전량(kWh)', totalEnergyKwh.toFixed(1)],
-    ['총 손실(kWh)', totalLossKwh.toFixed(1)],
+    ['총 충전비용', totalCost > 0 ? totalCost.toLocaleString('ko-KR') + '원' : '-'],
     ['평균 충전시간(분)', avgDurationMin.toFixed(0)],
   ];
   
   document.getElementById('chargingSummary').innerHTML = cards.map(([label, value]) => `
     <div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>
   `).join('');
+}
+
+// 충전비용 표시. 미입력이면 안내 문구, 입력되어 있으면 단가도 같이 보여줌
+function formatCost(s) {
+  if (!s.cost || s.cost <= 0) {
+    return '<span style="color:#6b7280">미입력</span>';
+  }
+  const won = s.cost.toLocaleString('ko-KR');
+  const unit = s.costPerKwh > 0
+    ? `<div style="font-size:0.7rem;color:#9a9ea8">${s.costPerKwh}원/kWh</div>`
+    : '';
+  return `<div>${won}원</div>${unit}`;
 }
 
 function renderChargingTable(sessions) {
@@ -334,7 +346,7 @@ function renderChargingTable(sessions) {
       <td>${s.energyChargedKwh}kWh</td>
       <td>${s.durationMin}분</td>
       <td>${s.avgPowerKw}kW</td>
-      <td>${s.estimatedLossKwh}kWh</td>
+      <td>${formatCost(s)}</td>
       <td>${s.chargeType}</td>
     </tr>
   `).join('');
